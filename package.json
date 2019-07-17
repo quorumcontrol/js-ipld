@@ -60,7 +60,6 @@
     "ipld-raw": "^4.0.0",
     "merge-options": "^1.0.1",
     "multicodec": "~0.5.1",
-    "promisify-es6": "^1.0.3",
     "typical": "^5.0.0"
   },
   "contributors": [

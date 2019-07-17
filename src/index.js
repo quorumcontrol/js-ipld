@@ -1,5 +1,8 @@
 'use strict'
 
+// Fork of https://github.com/ipld/js-ipld to support the
+// modern versions of repo/block-service which use async/await
+
 const Block = require('ipfs-block')
 const CID = require('cids')
 const mergeOptions = require('merge-options')
@@ -7,7 +10,6 @@ const ipldDagCbor = require('ipld-dag-cbor')
 const ipldDagPb = require('ipld-dag-pb')
 const ipldRaw = require('ipld-raw')
 const multicodec = require('multicodec')
-const promisify = require('promisify-es6')
 const typical = require('typical')
 const { extendIterator } = require('./util')
 
@@ -95,7 +97,7 @@ class IPLDResolver {
         // get block
         // use local resolver
         // update path value
-        const block = await promisify(this.bs.get.bind(this.bs))(cid)
+        const block = await this.bs.get(cid)
         const result = format.resolver.resolve(block.data, path)
 
         // Prepare for the next iteration if there is a `remainderPath`
@@ -129,7 +131,7 @@ class IPLDResolver {
    * @returns {Promise.<Object>} - Returns a Promise with the IPLD Node that correspond to the given `cid`.
    */
   async get (cid) {
-    const block = await promisify(this.bs.get.bind(this.bs))(cid)
+    const block = await this.bs.get(cid)
     const format = await this._getFormat(block.cid.codec)
     const node = format.util.deserialize(block.data)
 
@@ -194,7 +196,7 @@ class IPLDResolver {
 
     if (!options.onlyHash) {
       const block = new Block(serialized, cid)
-      await promisify(this.bs.put.bind(this.bs))(block)
+      await this.bs.put(block)
     }
 
     return cid
@@ -255,7 +257,7 @@ class IPLDResolver {
    * @return {Promise.<CID>} The CID of the removed IPLD Node.
    */
   async remove (cid) { // eslint-disable-line require-await
-    return promisify(this.bs.delete.bind(this.bs))(cid)
+    return this.bs.delete(cid)
   }
 
   /**
@@ -336,7 +338,7 @@ class IPLDResolver {
         if (treePaths.length === 0 && queue.length > 0) {
           ({ cid, basePath } = queue.shift())
           const format = await this._getFormat(cid.codec)
-          block = await promisify(this.bs.get.bind(this.bs))(cid)
+          block = await this.bs.get(cid)
 
           const paths = format.resolver.tree(block.data)
           treePaths.push(...paths)
